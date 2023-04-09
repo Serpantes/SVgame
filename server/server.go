@@ -3,39 +3,30 @@ package server
 import (
 	"net/http"
 
-	"github.com/gorilla/websocket"
+	game "github.com/Serpantes/SVgame/game"
 	log "github.com/sirupsen/logrus"
 )
 
-var addr = "localhost:8081"
-var upgrader = websocket.Upgrader{} // use default options
+var addr = "127.0.0.1:8081"
+
+var Game *game.Game
 
 func InitServer() {
-	log.Debug("Init server")
-	http.HandleFunc("/", test)
-	log.Fatal(http.ListenAndServe(addr, nil))
-
-}
-
-func test(w http.ResponseWriter, r *http.Request) {
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	c, err := upgrader.Upgrade(w, r, nil)
+	log.Info("Init hub")
+	Hub := newHub()
+	Game = game.NewGame("")
+	go Hub.run()
+	go refreshStateLoop(Hub)
+	log.Info("Init server")
+	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+		fileHandler(w, r)
+	})
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(Hub, w, r)
+	})
+	log.Info("Staring server on ", addr)
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
-		return
-	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
+		log.Fatal("ListenAndServe: ", err)
 	}
 }

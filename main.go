@@ -1,10 +1,10 @@
 package main
 
+//April 3 2023
+
 import (
 	"github.com/Serpantes/SVgame/config"
-	"github.com/Serpantes/SVgame/engine"
 	"github.com/Serpantes/SVgame/server"
-	"github.com/Serpantes/SVgame/storage"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -14,7 +14,5 @@ log.Info("Hello world")
 config.InitConfig()
 config.InitLogger()
 server.InitServer()
-storage.InitStorage()
-engine.InitEngine()
-log.Error("DOne!")
+log.Error("Done!")
 }
